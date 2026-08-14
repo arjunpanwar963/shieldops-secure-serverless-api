@@ -42,10 +42,6 @@ def _not_found():
 def _validate_note_payload(payload):
     if not isinstance(payload, dict):
         return "Request body must be a JSON object"
-    if not isinstance(title, str) or not title.strip():
-        return "Field 'title' is required and must be a non-empty string"
-    if len(title) > 5:  # BROKEN ON PURPOSE - was MAX_TITLE_LEN (100)
-        return f"Field 'title' must be <= {MAX_TITLE_LEN} characters"
     title = payload.get("title")
     body = payload.get("body", "")
 
