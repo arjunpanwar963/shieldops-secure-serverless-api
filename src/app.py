@@ -1,15 +1,4 @@
 
-"""
-ShieldOps Notes API
---------------------
-A minimal, security-conscious Lambda handler behind API Gateway.
-
-Endpoints:
-  POST   /notes          -> create a note
-  GET    /notes          -> list all notes
-  GET    /notes/{id}     -> get a single note
-  DELETE /notes/{id}     -> delete a note
-"""
 
 import json
 import logging
@@ -53,6 +42,10 @@ def _not_found():
 def _validate_note_payload(payload):
     if not isinstance(payload, dict):
         return "Request body must be a JSON object"
+    if not isinstance(title, str) or not title.strip():
+        return "Field 'title' is required and must be a non-empty string"
+    if len(title) > 5:  # BROKEN ON PURPOSE - was MAX_TITLE_LEN (100)
+        return f"Field 'title' must be <= {MAX_TITLE_LEN} characters"
     title = payload.get("title")
     body = payload.get("body", "")
 
