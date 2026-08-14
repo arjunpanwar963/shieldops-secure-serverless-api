@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  ShieldOps - Secure Serverless Notes API
+  Lambda + API Gateway, deployed via SAM. WAF added later in Phase 7.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: prod
+    Description: API Gateway deployment stage name
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 128
+    Runtime: python3.12
+    Tracing: Active
+    Environment:
+      Variables:
+        LOG_LEVEL: INFO
+
+Resources:
+
+  NotesApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+      TracingEnabled: true
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          ThrottlingRateLimit: 50
+          ThrottlingBurstLimit: 20
+
+  NotesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.lambda_handler
+      CodeUri: src/
+      Description: ShieldOps Notes API handler
+      Events:
+        CreateOrList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref NotesApi
+            Path: /notes
+            Method: ANY
+        GetOrDelete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref NotesApi
+            Path: /notes/{id}
+            Method: ANY
+      Policies:
+        - AWSLambdaBasicExecutionRole
+
+Outputs:
+  ApiUrl:
+    Description: Invoke URL for the Notes API
+    Value: !Sub "https://${NotesApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/notes"
